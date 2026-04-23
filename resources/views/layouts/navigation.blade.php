@@ -13,7 +13,7 @@
                         Tableau de bord
                     </x-nav-link>
                     <x-nav-link :href="route('prive')" :active="request()->routeIs('prive')">
-                        Espace membre
+                        Espace premium
                     </x-nav-link>
                     <x-nav-link :href="route('films.index')" :active="request()->routeIs('films.*')">
                         Films
@@ -76,7 +76,7 @@
                 Tableau de bord
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('prive')" :active="request()->routeIs('prive')">
-                Espace membre
+                Espace premium
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('films.index')" :active="request()->routeIs('films.*')">
                 Films

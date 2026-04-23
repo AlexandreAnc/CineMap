@@ -19,7 +19,7 @@ Route::get('/dashboard', function () {
 })->middleware('auth')->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::view('/prive', 'prive')->name('prive');
+    Route::view('/prive', 'prive')->middleware('subscribed')->name('prive');
 
     Route::get('films', [FilmController::class, 'index'])->name('films.index');
     Route::get('films/{film}', [FilmController::class, 'show'])->name('films.show')->whereNumber('film');
