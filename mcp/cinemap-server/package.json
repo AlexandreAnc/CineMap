@@ -4,7 +4,9 @@
   "description": "MCP lecture seule pour l'app Laravel CineMap",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "start:stdio": "CINEMAP_MCP_TRANSPORT=stdio node index.js",
+    "start:http": "CINEMAP_MCP_TRANSPORT=http node index.js"
   },
   "keywords": ["mcp", "cinemap"],
   "author": "",
