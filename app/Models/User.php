@@ -35,7 +35,6 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * “Premium” = abonnement Stripe enregistré (table subscriptions Cashier) pour l’offre
-     * nommée default. Le compte “qui paie” est le client Stripe : users.stripe_id.
      */
     public function isPremium(): bool
     {
