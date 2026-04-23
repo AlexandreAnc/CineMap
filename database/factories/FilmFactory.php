@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Film;
+use Faker\Factory as FakerFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -15,10 +16,12 @@ class FilmFactory extends Factory
 
     public function definition(): array
     {
+        $faker = FakerFactory::create();
+
         return [
-            'title' => Str::title($this->faker->words(random_int(2, 4), true)),
-            'release_year' => $this->faker->numberBetween(1985, (int) date('Y')),
-            'synopsis' => $this->faker->optional(0.9)->text(300),
+            'title' => Str::title($faker->words(random_int(2, 4), true)),
+            'release_year' => $faker->numberBetween(1985, (int) date('Y')),
+            'synopsis' => $faker->optional(0.9)->text(300),
         ];
     }
 }

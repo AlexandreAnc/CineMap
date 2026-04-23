@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Film;
 use App\Models\Location;
 use App\Models\User;
+use Faker\Factory as FakerFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -17,13 +18,15 @@ class LocationFactory extends Factory
 
     public function definition(): array
     {
+        $faker = FakerFactory::create();
+
         return [
             'film_id' => Film::factory(),
             'user_id' => User::factory(),
-            'name' => Str::title($this->faker->words(2, true)).' — '.$this->faker->city(),
-            'city' => $this->faker->city(),
-            'country' => $this->faker->country(),
-            'description' => $this->faker->optional(0.85)->realText(200),
+            'name' => Str::title($faker->words(2, true)).' — '.$faker->city(),
+            'city' => $faker->city(),
+            'country' => $faker->country(),
+            'description' => $faker->optional(0.85)->text(200),
             'upvotes_count' => 0,
         ];
     }
