@@ -66,6 +66,10 @@ jobs:
             php artisan queue:restart
 
             systemctl restart cinemap-queue
-            systemctl restart cinemap-mcp
+            if systemctl list-unit-files | grep -q '^cinemap-mcp\.service'; then
+              systemctl restart cinemap-mcp
+            else
+              echo "cinemap-mcp.service non installé sur le serveur (skip restart)."
+            fi
             systemctl restart php8.4-fpm
             systemctl restart nginx
