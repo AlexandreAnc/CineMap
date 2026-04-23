@@ -16,9 +16,9 @@ class FilmFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => Str::title(fake()->words(random_int(2, 4), true)),
-            'release_year' => fake()->numberBetween(1985, (int) date('Y')),
-            'synopsis' => fake()->optional(0.9)->text(300),
+            'title' => Str::title($this->faker->words(random_int(2, 4), true)),
+            'release_year' => $this->faker->numberBetween(1985, (int) date('Y')),
+            'synopsis' => $this->faker->optional(0.9)->text(300),
         ];
     }
 }

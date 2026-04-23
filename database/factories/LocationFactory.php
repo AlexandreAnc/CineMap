@@ -20,10 +20,10 @@ class LocationFactory extends Factory
         return [
             'film_id' => Film::factory(),
             'user_id' => User::factory(),
-            'name' => Str::title(fake()->words(2, true)).' — '.fake()->city(),
-            'city' => fake()->city(),
-            'country' => fake()->country(),
-            'description' => fake()->optional(0.85)->realText(200),
+            'name' => Str::title($this->faker->words(2, true)).' — '.$this->faker->city(),
+            'city' => $this->faker->city(),
+            'country' => $this->faker->country(),
+            'description' => $this->faker->optional(0.85)->realText(200),
             'upvotes_count' => 0,
         ];
     }
