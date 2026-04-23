@@ -1,86 +1,342 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# TP Laravel - CineMap
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Application Laravel réalisée dans le cadre du TP : gestion de films et d'emplacements, avec authentification, rôles admin, upvotes via job, commande planifiée, OAuth Google, abonnement Stripe, API JWT protégée et MCP lecture seule.
 
-## CineMap — formatage du code (Laravel Pint)
+## Contexte
 
-Avant chaque rendu, formate le code PHP (style **PSR-12** + règles **Laravel**) :
+Le projet `CineMap` est volontairement simple :
+- 2 CRUDs métier principaux : `Film` et `Location`
+- 1 fonctionnalité transverse sans CRUD complet : les upvotes sur les emplacements
+- interface sobre (Blade), validations serveur, flux complet fonctionnel
+
+## Objectifs pédagogiques couverts
+
+- authentification Laravel
+- CRUDs standards
+- middleware personnalisé admin
+- queues + jobs
+- commande Artisan personnalisée + scheduler
+- formatage Laravel Pint
+- connexion OAuth (Google)
+- abonnement Stripe (test) + route API JSON protégée
+- intégration MCP lecture seule (`list_films`, `get_locations_for_film`)
+
+## Stack et dépendances
+
+- projet initialisé à partir du template de base officiel Laravel (`laravel/laravel`)
+- PHP `^8.3`
+- Laravel `^13`
+- Laravel Breeze (auth UI)
+- Laravel Cashier (Stripe)
+- Socialite (OAuth Google)
+- `php-open-source-saver/jwt-auth` (JWT API)
+- Queue `database`
+
+## Modèle de données
+
+### Film
+- `title`
+- `release_year`
+- `synopsis`
+
+### Location
+- `film_id`
+- `user_id`
+- `name`
+- `city`
+- `country`
+- `description`
+- `photo_path` (optionnel)
+- `upvotes_count` (défaut `0`)
+
+### Votes
+- table `location_votes` (`user_id`, `location_id`, `created_at`)
+- contrainte d'unicité fonctionnelle : un utilisateur ne vote qu'une fois par emplacement (vote toggle)
+
+### Utilisateur
+- champs auth Laravel
+- `is_admin` (booléen)
+- `google_id` (OAuth)
+
+## Fonctionnalités livrées (mapping TP)
+
+1. **Authentification** : inscription, connexion, déconnexion, dashboard protégé.
+2. **CRUD Film + CRUD Location** : création/lecture/mise à jour/suppression, rattachement location -> film + user.
+3. **Middleware admin** : alias `admin`, protection des routes d'administration (films).
+4. **Queues & Jobs** : vote sur location -> `SyncLocationUpvotesCount` dispatché en queue.
+5. **Commande + planification** :
+   - commande : `locations:prune-stale`
+   - règle : supprime les locations de plus de 14 jours avec moins de 2 upvotes
+   - scheduler : exécution quotidienne dans `bootstrap/app.php`.
+6. **Pint** : formatage standard Laravel.
+7. **OAuth Google** : redirection + callback + création/connexion utilisateur.
+8. **Stripe + API JWT** :
+   - abonnement premium via Checkout Stripe
+   - API `/api/films/{film}/locations` protégée par `auth:api` + middleware `subscribed`.
+9. **MCP lecture seule** :
+   - `list_films`
+   - `get_locations_for_film`
+   - pont HTTP vers `/api/mcp/films` et `/api/mcp/films/{film}/locations`.
+
+## Installation
+
+```bash
+git clone <url-du-repo>
+cd my-app
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan storage:link
+```
+
+Puis lancer les assets :
+
+```bash
+npm run build
+```
+
+En développement (serveur + queue + logs + vite) :
+
+```bash
+composer run dev
+```
+
+## Configuration `.env` minimale
+
+Variables importantes :
+
+```env
+APP_URL=http://127.0.0.1:8000
+QUEUE_CONNECTION=database
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+STRIPE_KEY=
+STRIPE_SECRET=
+STRIPE_PREMIUM_PRICE=
+
+MCP_READ_TOKEN=
+```
+
+Pour JWT :
+
+```bash
+php artisan jwt:secret
+```
+
+## Lancer les services nécessaires
+
+Terminal 1 (app) :
+
+```bash
+php artisan serve
+```
+
+Terminal 2 (worker queue) :
+
+```bash
+php artisan queue:work
+```
+
+Terminal 3 (optionnel, scheduler local) :
+
+```bash
+php artisan schedule:work
+```
+
+## Tests
+
+Lancer tous les tests :
+
+```bash
+php artisan test
+```
+
+Les tests couvrent notamment :
+- accès API JWT premium/non premium
+- vote et logique d'upvotes
+- accès route privée par abonnement
+- lecture MCP
+
+## Etape 4 - Vérifier les jobs/upvotes
+
+1. Connectez-vous.
+2. Ouvrez une fiche d'emplacement et votez.
+3. Vérifiez que la table `location_votes` est mise à jour.
+4. Vérifiez que `upvotes_count` est recalculé par le job `SyncLocationUpvotesCount`.
+5. Assurez-vous que `php artisan queue:work` tourne pendant le test.
+
+## Etape 5 - Commande Artisan + scheduler
+
+Commande manuelle :
+
+```bash
+php artisan locations:prune-stale
+```
+
+Simulation scheduler :
+
+```bash
+php artisan schedule:run
+```
+
+Règle métier appliquée :
+- `created_at < now() - 14 jours`
+- `upvotes_count < 2`
+
+## Etape 6 - Formatage Laravel Pint
+
+Commande attendue avant rendu :
 
 ```bash
 ./vendor/bin/pint
 ```
 
-Équivalents : `composer run pint` ou `composer run format`.
-
-Dans ce dépôt, Pint s’applique via le fichier `pint.json` (préréglage `laravel`).
-
-Laravel Pint s’appuie sur [PHP-CS-Fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer) : il unifie les espaces, l’ordre des `use`, l’accolade, etc. pour garder le projet cohérent. Ce n’est pas le même outil qu’un linter qui signale des bugs, c’est un **formateur** (correction automatique du style).
-
-- [Documentation officielle Pint](https://laravel.com/docs/pint)
-
-## CineMap — serveur MCP (lecture seule, étape 9)
-
-- API Laravel (token `MCP_READ_TOKEN`) : `GET /api/mcp/films`, `GET /api/mcp/films/{id}/locations` (cf. `config/mcp.php`).
-- Serveur MCP Node (outils `list_films`, `get_locations_for_film`) : dossier `mcp/cinemap-server/` (installer avec `npm install` dans ce dossier). Voir le **README** détaillé : `mcp/cinemap-server/README.md`.
-
-## CineMap — connexion Google (OAuth)
-
-- Paquet : [Laravel Socialite](https://laravel.com/docs/socialite) (`composer require laravel/socialite`).
-- Variables d’environnement : `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (voir `.env.example`). Renseigne aussi l’**URI de redirection** dans [Google Cloud Console](https://console.cloud.google.com/) → APIs & services → identifiants → client OAuth 2.0 (type *Application Web*) :  
-  `http://127.0.0.1:8000/auth/google/callback` (adapter host/port si besoin, ou `GOOGLE_REDIRECT_URI` dans `.env`).
-- Routes : `GET /auth/google` (redirection Google), `GET /auth/google/callback` (retour, création ou reprise de compte).
-
-## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Alias possibles :
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer run pint
+composer run format
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Etape 7 - OAuth Google
 
-## Contributing
+Routes :
+- `GET /auth/google`
+- `GET /auth/google/callback`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Configuration côté Google Cloud Console :
+- créer un OAuth Client Web
+- URI de redirection autorisée :
+  - `http://127.0.0.1:8000/auth/google/callback`
 
-## Code of Conduct
+## Etape 8 - Stripe + JWT API
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 1) Souscription Stripe (mode test)
 
-## Security Vulnerabilities
+Configurer :
+- `STRIPE_KEY`
+- `STRIPE_SECRET`
+- `STRIPE_PREMIUM_PRICE` (id du prix Stripe, ex. `price_...`)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Parcours :
+- page `/subscribe`
+- checkout Stripe
+- retour `/subscribe/success`
 
-## License
+Carte de test possible :
+- `4242 4242 4242 4242`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 2) Générer un token JWT
+
+Endpoint login API :
+
+```text
+POST /api/auth/login
+```
+
+Payload :
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password"
+}
+```
+
+### 3) Appeler l'API protégée
+
+```bash
+curl -H "Authorization: Bearer <JWT_TOKEN>" \
+  http://127.0.0.1:8000/api/films/1/locations
+```
+
+Conditions d'accès :
+- JWT valide obligatoire
+- abonnement actif obligatoire
+
+## Etape 9 - MCP (lecture seule)
+
+### API Laravel exposée au MCP
+
+- `GET /api/mcp/films`
+- `GET /api/mcp/films/{film}/locations`
+- protection par token `MCP_READ_TOKEN` (middleware `mcp.read`)
+
+### Serveur MCP Node
+
+Dossier : `mcp/cinemap-server`
+
+Installation :
+
+```bash
+cd mcp/cinemap-server
+npm install
+```
+
+Lancement :
+
+```bash
+node index.js
+```
+
+Variables d'environnement attendues par le serveur MCP :
+
+```bash
+export CINEMAP_MCP_BASE_URL=http://127.0.0.1:8000
+export CINEMAP_MCP_READ_TOKEN=<meme_valeur_que_MCP_READ_TOKEN>
+```
+
+Outils MCP disponibles :
+- `list_films`
+- `get_locations_for_film` (argument : `film_id`)
+
+## Mise en production
+
+Le TP est également accessible publiquement en production :
+- [https://cinemap.aanc.fr](https://cinemap.aanc.fr)
+
+Choix de déploiement :
+- mise en production via un pipeline GitHub Actions simple ;
+- serveur web sous Nginx ;
+- domaine déployé avec certificat TLS géré via Certbot.
+
+## Routes principales
+
+Web :
+- `/dashboard`
+- `/films` (+ administration sur create/edit/delete via middleware `admin`)
+- `/locations`
+- `/subscribe`
+- `/prive` (protégée abonnement)
+
+API :
+- `POST /api/auth/login`
+- `GET /api/films/{film}/locations` (JWT + abonnement)
+- `GET /api/mcp/films` (token MCP)
+- `GET /api/mcp/films/{film}/locations` (token MCP)
+
+## Contraintes générales respectées
+
+- interface HTML simple (Blade)
+- peu de JS, logique principalement serveur
+- validations serveur sur formulaires
+- migrations dédiées et claires
+- pas de CRUD complet pour les votes
+- application exécutable de bout en bout
+
+## Checklist de rendu
+
+- [x] code source complet
+- [x] migrations
+- [x] modèles / contrôleurs / middleware / jobs / commandes / routes
+- [x] README d'installation et d'exécution
+- [x] instructions worker queue
+- [x] instructions scheduler
+- [x] instructions OAuth
+- [x] instructions Stripe
+- [x] instructions JWT
+- [x] instructions MCP

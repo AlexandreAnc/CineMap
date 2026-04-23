@@ -12,7 +12,7 @@ class EnsureUserIsSubscribed
     {
         $user = $request->user();
 
-        if (! $user || ! $user->isPro()) {
+        if (! $user || ! $user->isPremium()) {
             if (! $request->expectsJson()) {
                 return redirect()->route('subscribe')
                     ->with('status', 'Un abonnement premium actif est requis pour accéder à cette page.');

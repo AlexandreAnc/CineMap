@@ -1,5 +1,5 @@
 @php
-    $hasActive = $user->isPro();
+    $hasActive = $user->isPremium();
 @endphp
 <section>
     <header>

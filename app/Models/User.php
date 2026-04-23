@@ -34,10 +34,10 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * “Pro” = abonnement Stripe enregistré (table subscriptions Cashier) pour l’offre
+     * “Premium” = abonnement Stripe enregistré (table subscriptions Cashier) pour l’offre
      * nommée default. Le compte “qui paie” est le client Stripe : users.stripe_id.
      */
-    public function isPro(): bool
+    public function isPremium(): bool
     {
         return $this->subscribed('default');
     }
