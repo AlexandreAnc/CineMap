@@ -105,6 +105,30 @@ Si tu veux le publier sur ton domaine (`cinemap.aanc.fr`) :
 - exemple d’URL finale : `https://cinemap.aanc.fr/mcp`;
 - garde l’auth (`CINEMAP_MCP_ENDPOINT_TOKEN`) et le HTTPS.
 
+Exemple Nginx minimal :
+
+```nginx
+location /mcp {
+    proxy_pass http://127.0.0.1:3333/mcp;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+    proxy_buffering off;
+}
+
+location /healthz {
+    proxy_pass http://127.0.0.1:3333/healthz;
+    proxy_set_header Host $host;
+}
+```
+
+Service systemd recommandé :
+- template versionné : `deploy/systemd/cinemap-mcp.service`
+- variables privées serveur : `/etc/cinemap/mcp.env` (voir `deploy/systemd/mcp.env.example`)
+
 Quand `CINEMAP_MCP_ENDPOINT_TOKEN` est défini, les clients doivent envoyer :
 
 ```text

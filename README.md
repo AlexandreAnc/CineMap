@@ -280,7 +280,7 @@ npm install
 Lancement :
 
 ```bash
-node index.js
+npm run start:stdio
 ```
 
 Variables d'environnement attendues par le serveur MCP :
@@ -288,7 +288,27 @@ Variables d'environnement attendues par le serveur MCP :
 ```bash
 export CINEMAP_MCP_BASE_URL=http://127.0.0.1:8000
 export CINEMAP_MCP_READ_TOKEN=<meme_valeur_que_MCP_READ_TOKEN>
+export CINEMAP_MCP_TRANSPORT=stdio
 ```
+
+Mode endpoint URL (production) :
+
+```bash
+export CINEMAP_MCP_TRANSPORT=http
+export CINEMAP_MCP_BASE_URL=https://cinemap.aanc.fr
+export CINEMAP_MCP_HTTP_HOST=127.0.0.1
+export CINEMAP_MCP_HTTP_PORT=3333
+export CINEMAP_MCP_HTTP_PATH=/mcp
+export CINEMAP_MCP_ENDPOINT_TOKEN=<secret_endpoint_mcp>
+```
+
+Puis lancer :
+
+```bash
+npm run start:http
+```
+
+Le service systemd de référence est fourni dans `deploy/systemd/cinemap-mcp.service`.
 
 Outils MCP disponibles :
 - `list_films`

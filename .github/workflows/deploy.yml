@@ -55,6 +55,7 @@ jobs:
 
             composer install --no-dev --optimize-autoloader
             npm ci
+            npm ci --prefix mcp/cinemap-server
             npm run build
 
             php artisan migrate --force
@@ -65,5 +66,6 @@ jobs:
             php artisan queue:restart
 
             systemctl restart cinemap-queue
+            systemctl restart cinemap-mcp
             systemctl restart php8.4-fpm
             systemctl restart nginx
