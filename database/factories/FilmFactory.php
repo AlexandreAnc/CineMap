@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Film;
-use Faker\Factory as FakerFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -16,12 +15,18 @@ class FilmFactory extends Factory
 
     public function definition(): array
     {
-        $faker = FakerFactory::create();
+        $titles = [
+            'Le Dernier Quai',
+            'Nuit sur la Ville',
+            'Les Rues Oubliees',
+            'Ciel de Cinema',
+            'Memoire des Lieux',
+        ];
 
         return [
-            'title' => Str::title($faker->words(random_int(2, 4), true)),
-            'release_year' => $faker->numberBetween(1985, (int) date('Y')),
-            'synopsis' => $faker->optional(0.9)->text(300),
+            'title' => $titles[array_rand($titles)].' '.Str::upper(Str::random(3)),
+            'release_year' => random_int(1985, (int) date('Y')),
+            'synopsis' => 'Synopsis de demo pour un film CineMap.',
         ];
     }
 }
