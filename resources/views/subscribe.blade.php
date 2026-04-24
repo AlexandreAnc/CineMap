@@ -8,7 +8,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-4 text-sm text-gray-700">
                 <p>Abonnement de test (Stripe). Carte : 4242 4242 4242 4242, une date future, n’importe quel CVC.</p>
                 @if (auth()->user()->subscribed('default'))
-                    <p class="text-green-700 font-medium">Tu as un abonnement actif (nom : default).</p>
+                    <p class="text-green-700 font-medium">Tu as un abonnement actif.</p>
                 @else
                     <form method="post" action="{{ route('subscribe.checkout') }}">
                         @csrf
