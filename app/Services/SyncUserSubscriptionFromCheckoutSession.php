@@ -8,7 +8,6 @@ use Laravel\Cashier\Cashier;
 use Stripe\StripeClient;
 use Stripe\Subscription as StripeSubscription;
 
-
 final class SyncUserSubscriptionFromCheckoutSession
 {
     public function __invoke(User $user, string $sessionId, ?StripeClient $stripe = null): void
